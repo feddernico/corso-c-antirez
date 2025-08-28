@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lesson 15 — C Linked Lists, Files & tac (Self-Check)</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #11151a;
+    --text: #e6edf3;
+    --muted: #9fb0c3;
+    --accent: #64b5f6;
+    --good: #2ecc71;
+    --bad: #ff6b6b;
+    --warn: #ffbd4a;
+    --code: #0f1720;
+    --chip: #1b2430;
+    --border: #1b2530;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+    color: var(--text);
+    background: radial-gradient(1200px 700px at 10% 0%, #0e141c 0%, var(--bg) 60%);
+  }
+  header {
+    padding: 28px 20px 12px;
+    text-align: center;
+  }
+  h1 { margin: 0; font-size: 1.4rem; letter-spacing: .2px; }
+  .subtitle { color: var(--muted); margin-top: 6px; font-size: .95rem; }
+  main {
+    max-width: 980px; margin: 18px auto 60px; padding: 0 16px;
+    display: grid; grid-template-columns: 1fr; gap: 16px;
+  }
+  .card {
+    background: linear-gradient(180deg, var(--panel), #0f1318);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  .row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 880px) {
+    main { grid-template-columns: 1.5fr .9fr; }
+    .row { grid-template-columns: 1fr 1fr; }
+  }
+  h2 { font-size: 1.05rem; margin: 0 0 12px; letter-spacing: .2px; }
+  .muted { color: var(--muted); }
+  button, select, input[type="text"], textarea {
+    background: #0f1318; color: var(--text); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; font: inherit;
+  }
+  button { cursor: pointer; transition: transform .05s ease, background .15s ease, border-color .15s ease; }
+  button:hover { border-color: var(--accent); }
+  button:active { transform: translateY(1px); }
+  .btn-primary { background: linear-gradient(180deg, #152032, #0f1723); border-color: #203047; }
+  .btn-accent { background: linear-gradient(180deg, #1a2b3f, #132132); border-color: #2c4c70; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 999px; background: var(--chip);
+    border: 1px solid var(--border); color: var(--muted); font-size: .9rem;
+  }
+  .question { padding: 14px; border-radius: 12px; background: #0e1217; border: 1px dashed #223145; }
+  .answers { margin-top: 10px; display: grid; gap: 8px; }
+  .answer {
+    padding: 10px 12px; border-radius: 10px; background: #0d1218;
+    border: 1px solid var(--border);
+  }
+  .answer.correct { border-color: rgba(46, 204, 113, .6); background: rgba(46, 204, 113, .1); }
+  .answer.wrong { border-color: rgba(255, 107, 107, .6); background: rgba(255, 107, 107, .08); }
+  .explain { margin-top: 8px; color: var(--muted); font-size: .92rem; }
+  code, pre {
+    background: var(--code); color: #cde1ff; padding: 2px 6px; border-radius: 6px;
+    border: 1px solid #162131; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  pre { padding: 10px 12px; overflow: auto; }
+  .badge { font-size: .8rem; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--border); background: #101720; color: #9ecbff; }
+  .score { font-weight: 700; }
+  .good { color: var(--good); }
+  .bad { color: var(--bad); }
+  .warn { color: var(--warn); }
+  .tiny { font-size: .85rem; color: var(--muted); }
+  .flex { display: flex; gap: 8px; flex-wrap: wrap; }
+  .footer { text-align: center; padding: 28px 12px 36px; color: var(--muted); font-size: .9rem; }
+  .kbd { border: 1px solid var(--border); background: #0d1218; border-bottom: 3px solid #192433; padding: 1px 6px; border-radius: 6px; }
+  .hl { color: var(--accent); }
+  .grid-2 { display: grid; gap: 10px; grid-template-columns: 1fr; }
+  @media (min-width: 720px){ .grid-2 { grid-template-columns: 1fr 1fr; } }
+  .list { margin: 0; padding-left: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 15 — Files, <span class="hl">argc/argv</span>, and Linked Lists (tac)</h1>
+  <div class="subtitle">Self-check quiz + mini exercise to verify you got the core ideas.</div>
+</header>
+
+<main>
+  <!-- QUIZ -->
+  <section class="card" aria-labelledby="quizTitle">
+    <div class="flex" style="justify-content:space-between; align-items:center;">
+      <h2 id="quizTitle">Interactive Quiz</h2>
+      <span class="pill"><span class="badge">Mode</span> Multiple choice · Multi-select · Short answer</span>
+    </div>
+    <div class="tiny" style="margin-bottom:10px;">You’ll get a random set each time. Some questions accept multiple correct answers.</div>
+    <div id="quiz"></div>
+    <div class="flex" style="margin-top:12px;">
+      <button id="check" class="btn-primary">Check answers (<span id="count">0</span> selected)</button>
+      <button id="retry" class="btn-accent">New random set</button>
+      <div style="margin-left:auto;" class="tiny">Tip: use <span class="kbd">R</span> to retry, <span class="kbd">C</span> to check.</div>
+    </div>
+    <div id="result" style="margin-top:12px;"></div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section class="card" aria-labelledby="practiceTitle">
+    <h2 id="practiceTitle">Mini Exercise — “tac” mental model</h2>
+    <p class="muted">Paste lines below and click <em>Reverse</em>. Imagine each line becomes a node in a <strong>linked list</strong> inserted at the <em>head</em> as you read; printing from head yields reverse order.</p>
+    <div class="grid-2">
+      <div>
+        <label for="inputLines" class="tiny">Input (each line → a node)</label>
+        <textarea id="inputLines" rows="10" placeholder="one\n two\n three"></textarea>
+        <div class="flex" style="margin-top:8px;">
+          <button id="reverseBtn" class="btn-primary">Reverse (simulate head insertion)</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+      </div>
+      <div>
+        <label for="outputLines" class="tiny">Output (like <code>tac</code>)</label>
+        <textarea id="outputLines" rows="10" readonly></textarea>
+        <div class="tiny" style="margin-top:6px;">
+          Complexity: build O(n), print O(n) — but memory stores all lines (trade-off).
+        </div>
+      </div>
+    </div>
+    <details style="margin-top:10px;">
+      <summary>Why copy the buffer into newly allocated memory in C?</summary>
+      <div class="muted" style="margin-top:8px;">
+        Because a single reusable buffer (e.g., <code>char buf[1024]</code>) gets overwritten on each <code>fgets</code>.
+        Each node needs its <em>own</em> string copy (<code>malloc(strlen(buf)+1)</code> then copy) or all nodes would
+        point to the final line read.
+      </div>
+    </details>
+  </section>
+
+  <!-- QUICK NOTES -->
+  <section class="card" aria-labelledby="notesTitle">
+    <h2 id="notesTitle">What this tests</h2>
+    <ul class="list">
+      <li>Meaning of <code>int main(int argc, char **argv)</code> and what <code>argv[0]</code> is.</li>
+      <li>Opening/closing files: <code>FILE *</code>, <code>fopen</code> (mode <code>"r"</code>), <code>fclose</code>, error checks.</li>
+      <li>Reading lines with <code>fgets</code> (newline retained), buffers, and <code>strlen</code>/<code>size_t</code>.</li>
+      <li>Defining a linked list: <code>struct line { char *s; struct line *next; };</code></li>
+      <li>Dynamic allocation with <code>malloc</code> and why copying is needed.</li>
+      <li>Head insertion to reverse order; traversing to print.</li>
+      <li>Big-O: build O(n), print O(n); memory trade-offs; correctness caveats.</li>
+    </ul>
+    <p class="tiny">Nice-to-know: <code>FILE</code> is a typedef’d struct; <code>strlen</code> returns <code>size_t</code>;
+      freeing nodes prevents leaks; robust tools are binary-safe and handle arbitrarily long lines.</p>
+  </section>
+</main>
+
+<div class="footer">Keyboard shortcuts: <span class="kbd">C</span> check · <span class="kbd">R</span> retry</div>
+
+<script>
+/* -----------------------------
+   Question Bank (Lesson 15)
+   Type: mc (single), ms (multi), text (short)
+------------------------------*/
+const BANK = [
+  {
+    id: 'main-sig', type: 'mc',
+    q: 'In C, what does the signature of this lesson’s main look like when accepting command-line arguments?',
+    choices: [
+      'int main(void)',
+      'int main(int argc, char **argv)',
+      'void main(int argc, char *argv[])',
+      'int main(char *argc, int **argv)'
+    ],
+    correct: [1],
+    explain: 'Use int main(int argc, char **argv). argv is an array of pointers to char (strings).'
+  },
+  {
+    id: 'argv0', type: 'mc',
+    q: 'What is typically stored in argv[0]?',
+    choices: [
+      'The first user-supplied argument (e.g., a filename)',
+      'The name/path of the program itself',
+      'Always NULL',
+      'The count of arguments as a string'
+    ],
+    correct: [1],
+    explain: 'argv[0] generally holds the program name/path; user args start at argv[1].'
+  },
+  {
+    id: 'fopen-mode', type: 'mc',
+    q: 'Which fopen mode opens a file for reading (text) without truncating?',
+    choices: ['"w"', '"a"', '"r"', '"r+"'],
+    correct: [2],
+    explain: '"r" opens for reading; "w" truncates, "a" appends, "r+" read/write.'
+  },
+  {
+    id: 'fopen-null', type: 'mc',
+    q: 'If fopen fails to open a file, what does it return?',
+    choices: ['An invalid FILE with fd = -1', 'NULL', '0', 'A FILE* that must be fclose’d immediately'],
+    correct: [1],
+    explain: 'On failure fopen returns NULL; check before using.'
+  },
+  {
+    id: 'fgets-nl', type: 'mc',
+    q: 'When reading a line with fgets into a buffer, what happens to the newline?',
+    choices: ['It is discarded by fgets', 'It is included in the buffer if there is space', 'It is converted to "\\0"', 'Undefined'],
+    correct: [1],
+    explain: 'fgets stores the newline (if there’s room). The string is NUL-terminated.'
+  },
+  {
+    id: 'strlen-type', type: 'mc',
+    q: 'What is the return type of strlen?',
+    choices: ['int', 'size_t', 'long', 'unsigned'],
+    correct: [1],
+    explain: 'strlen returns size_t, an unsigned integral type for sizes.'
+  },
+  {
+    id: 'list-struct', type: 'ms',
+    q: 'Select the correct fields for the lesson’s linked-list node for lines.',
+    choices: [
+      'char *s;',
+      'int s[1024];',
+      'struct line *next;',
+      'struct line next;'
+    ],
+    correct: [0,2],
+    explain: 'Node holds the string pointer (char *s) and a pointer to the next node (struct line *next).'
+  },
+  {
+    id: 'head-insert', type: 'mc',
+    q: 'To reverse order while reading lines, where do we insert each new node?',
+    choices: ['At the tail', 'At the head', 'In the middle', 'We sort later'],
+    correct: [1],
+    explain: 'Insert at the head: l->next = head; head = l; This yields reverse order.'
+  },
+  {
+    id: 'why-copy', type: 'ms',
+    q: 'Why must we copy from buf into freshly malloc’d memory for each node?',
+    choices: [
+      'Because buf is reused each iteration and would be overwritten',
+      'Because malloc automatically frees buf',
+      'Because each node needs its own independent string storage',
+      'To avoid undefined behavior after fclose'
+    ],
+    correct: [0,2],
+    explain: 'The reusable buffer is overwritten on each fgets; each node needs its own copy.'
+  },
+  {
+    id: 'complexity', type: 'mc',
+    q: 'As implemented, building the list and then printing it has time complexity:',
+    choices: ['Build O(1), Print O(n)', 'Build O(n), Print O(n)', 'Build O(n log n), Print O(1)', 'Both O(n log n)'],
+    correct: [1],
+    explain: 'Each line is processed once when building and once when printing: O(n) + O(n).'
+  },
+  {
+    id: 'memory-tradeoff', type: 'mc',
+    q: 'Main trade-off of this approach vs. a streaming solution?',
+    choices: ['Less CPU, more I/O', 'Stores the entire file in memory', 'Requires POSIX-only APIs', 'Cannot handle empty files'],
+    correct: [1],
+    explain: 'We keep all lines in a linked list: memory grows with file size.'
+  },
+  {
+    id: 'typedef-file', type: 'mc',
+    q: 'In C’s standard library, FILE is…',
+    choices: ['A keyword', 'A macro that expands to int', 'A typedef for a struct type', 'An enum'],
+    correct: [2],
+    explain: 'FILE is typically a typedef’d struct representing a stream.'
+  },
+  {
+    id: 'short-argv', type: 'text',
+    q: 'Short answer: What C type best describes argv (from main)?',
+    placeholder: '…',
+    correctText: ['char **', 'char* *', 'char *argv[]'],
+    explain: 'argv is an array of pointers to char (strings): char **argv (equivalently char *argv[]).'
+  },
+  {
+    id: 'freeing', type: 'ms',
+    q: 'To avoid memory leaks, which items should be freed after printing?',
+    choices: [
+      'Each node’s s (string)',
+      'Each node struct',
+      'argv',
+      'The FILE* returned by fopen with free(fp)'
+    ],
+    correct: [0,1],
+    explain: 'Free the string and the node. Use fclose(fp) (not free) for the file stream.'
+  }
+];
+
+const QUIZ_SIZE = 10;
+
+const el = {
+  quiz: document.getElementById('quiz'),
+  check: document.getElementById('check'),
+  retry: document.getElementById('retry'),
+  result: document.getElementById('result'),
+  count: document.getElementById('count'),
+  input: document.getElementById('inputLines'),
+  output: document.getElementById('outputLines'),
+  reverseBtn: document.getElementById('reverseBtn'),
+  clearBtn: document.getElementById('clearBtn')
+};
+
+let currentQuestions = [];
+let checked = false;
+
+function sample(arr, k){
+  const a = [...arr];
+  for (let i=a.length-1;i>0;i--){
+    const j = (Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a.slice(0,k);
+}
+function esc(s){ return s.replace(/[&<>"]/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m])); }
+
+function renderQuiz(){
+  checked = false;
+  currentQuestions = sample(BANK, QUIZ_SIZE);
+  el.quiz.innerHTML = '';
+  el.result.textContent = '';
+  el.count.textContent = '0';
+
+  currentQuestions.forEach((q, idx)=>{
+    const qEl = document.createElement('div');
+    qEl.className = 'question';
+    qEl.dataset.qid = q.id;
+
+    let body = `<div class="flex" style="justify-content:space-between; align-items:center;">
+      <div><strong>Q${idx+1}.</strong> ${esc(q.q)}</div>
+      <span class="badge">${q.type === 'mc' ? 'Single choice' : q.type === 'ms' ? 'Multi-select' : 'Short answer'}</span>
+    </div>`;
+
+    if (q.type === 'mc' || q.type === 'ms') {
+      const name = `q_${idx}`;
+      const multi = q.type === 'ms';
+      body += `<div class="answers">`;
+      q.choices.forEach((c, i)=>{
+        const id = `${name}_${i}`;
+        body += `<label class="answer">
+          <input ${multi ? 'type="checkbox"' : 'type="radio"'} name="${name}" value="${i}" />
+          <span>${esc(c)}</span>
+        </label>`;
+      });
+      body += `</div>`;
+    } else {
+      body += `<div class="answers"><input type="text" aria-label="Answer" placeholder="${q.placeholder||'Answer'}" /></div>`;
+    }
+
+    qEl.innerHTML = body;
+    el.quiz.appendChild(qEl);
+  });
+
+  el.quiz.querySelectorAll('input[type="radio"], input[type="checkbox"], input[type="text"]').forEach(inp=>{
+    inp.addEventListener('input', updateCount);
+  });
+}
+
+function updateCount(){
+  let count = 0;
+  currentQuestions.forEach((q, idx)=>{
+    const node = el.quiz.children[idx];
+    if (!node) return;
+    if (q.type === 'mc') {
+      const sel = node.querySelector('input[type="radio"]:checked');
+      if (sel) count++;
+    } else if (q.type === 'ms') {
+      const any = node.querySelectorAll('input[type="checkbox"]:checked').length;
+      if (any) count++;
+    } else {
+      const v = node.querySelector('input[type="text"]').value.trim();
+      if (v) count++;
+    }
+  });
+  el.count.textContent = String(count);
+}
+
+function arraysEqual(a, b){
+  if (a.length !== b.length) return false;
+  const s1 = [...a].sort((x,y)=>x-y);
+  const s2 = [...b].sort((x,y)=>x-y);
+  return s1.every((v,i)=>v===s2[i]);
+}
+
+function checkAnswers(){
+  if (checked) return;
+  checked = true;
+  let correct = 0;
+
+  currentQuestions.forEach((q, idx)=>{
+    const node = el.quiz.children[idx];
+    const ansWraps = node.querySelectorAll('.answer');
+
+    // clear previous state
+    ansWraps.forEach(w=>w.classList.remove('correct','wrong'));
+    const oldExplain = node.querySelector('.explain');
+    if (oldExplain) oldExplain.remove();
+
+    let ok = false;
+
+    if (q.type === 'mc') {
+      const sel = node.querySelector('input[type="radio"]:checked');
+      const picked = sel ? [Number(sel.value)] : [];
+      ok = arraysEqual(picked, q.correct);
+      ansWraps.forEach((w, i)=>{
+        if (q.correct.includes(i)) w.classList.add('correct');
+        else if (sel && Number(sel.value)===i) w.classList.add('wrong');
+      });
+    } else if (q.type === 'ms') {
+      const picks = [...node.querySelectorAll('input[type="checkbox"]:checked')].map(x=>Number(x.value));
+      ok = arraysEqual(picks, q.correct);
+      ansWraps.forEach((w, i)=>{
+        if (q.correct.includes(i)) w.classList.add('correct');
+        else if (picks.includes(i)) w.classList.add('wrong');
+      });
+    } else {
+      const v = node.querySelector('input[type="text"]').value.trim();
+      const norm = v.replace(/\s+/g,'').toLowerCase();
+      const accepted = q.correctText.map(s=>s.replace(/\s+/g,'').toLowerCase());
+      ok = accepted.includes(norm);
+      // decorate by showing green/red border on input
+      const input = node.querySelector('input[type="text"]');
+      input.classList.toggle('good', ok);
+      input.classList.toggle('bad', !ok);
+      input.style.borderColor = ok ? 'rgba(46,204,113,.6)' : 'rgba(255,107,107,.6)';
+      input.style.background = ok ? 'rgba(46,204,113,.08)' : 'rgba(255,107,107,.06)';
+    }
+
+    if (ok) correct++;
+    const expl = document.createElement('div');
+    expl.className = 'explain';
+    expl.innerHTML = `<strong>${ok ? 'Correct!' : 'Explanation:'}</strong> ${esc(q.explain)}`;
+    node.appendChild(expl);
+  });
+
+  const pct = Math.round((correct/currentQuestions.length)*100);
+  el.result.innerHTML = `<span class="score">${correct}/${currentQuestions.length}</span> correct — ${pct}% ` +
+    (pct===100 ? `<span class="good">Perfect!</span>` :
+     pct>=80 ? `<span class="good">Great!</span>` :
+     pct>=60 ? `<span class="warn">Getting there.</span>` :
+               `<span class="bad">Worth another pass.</span>`);
+}
+
+function simulateTac(){
+  const lines = el.input.value.replace(/\r\n/g, '\n').split('\n');
+  // Simulate head insertion (reverse) without fancy data structures:
+  const out = [];
+  for (const line of lines) {
+    out.unshift(line); // head insertion effect
+  }
+  el.output.value = out.join('\n');
+}
+
+function clearIO(){
+  el.input.value = '';
+  el.output.value = '';
+  el.input.focus();
+}
+
+renderQuiz();
+
+// Events
+el.check.addEventListener('click', checkAnswers);
+el.retry.addEventListener('click', renderQuiz);
+el.reverseBtn.addEventListener('click', simulateTac);
+el.clearBtn.addEventListener('click', clearIO);
+document.addEventListener('keydown', (e)=>{
+  if (e.key.toLowerCase()==='r') { e.preventDefault(); renderQuiz(); }
+  if (e.key.toLowerCase()==='c') { e.preventDefault(); checkAnswers(); }
+});
+</script>
+</body>
+</html>
